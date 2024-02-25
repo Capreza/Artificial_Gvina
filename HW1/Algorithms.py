@@ -17,7 +17,11 @@ def get_manheten_distance(state_1, state_2, N):
 
 def get_houristic(state, env):
     current_index = state[0]
-    goal_states = [env.d1, env.d2] + env.get_goal_states()
+    goal_states = env.get_goal_states().copy()
+    if not state[1]:
+        goal_states += [env.d1]
+    if not state[2]:
+        goal_states += [env.d2]
     min_goal = np.inf 
     for goal in goal_states:
         distance_goal = get_manheten_distance(state[0], goal[0], env.nrow)
@@ -57,13 +61,13 @@ class Agent:
         self.env = None
 
     def animation(self, epochs: int ,state: int, action: List[int], total_cost: int, created_nodes: int) -> None:
-        clear_output(wait=True)
-        print(self.env.render())
-        print(f"Timestep: {epochs}")
-        print(f"Created Nodes: {created_nodes}")
-        print(f"State: {state}")
-        print(f"Action: {action}")
-        print(f"Total Cost: {total_cost}")
+        # clear_output(wait=True)
+        # print(self.env.render())
+        # print(f"Timestep: {epochs}")
+        # print(f"Created Nodes: {created_nodes}")
+        # print(f"State: {state}")
+        # print(f"Action: {action}")
+        # print(f"Total Cost: {total_cost}")
         # time.sleep(1)
         pass
     
@@ -75,7 +79,6 @@ class Agent:
         cost = 0
         terminated = False
         for action in action_list_from_init:
-            # print(state)
             state, new_cost, terminated = self.env.step(action)
             cost = cost + new_cost
             self.animation(epochs,state,action,cost, created_nodes)
@@ -84,22 +87,17 @@ class Agent:
     def expand(self, node :Node):
         succs = self.env.succ(node.state) #there might be a problem with remembering what balls i already picked up
         expanded = []
-        for action, successor in succs.items():
-            new_state_index = successor[0][0]
-            is_d1 = self.env.d1[0] == successor[0][0]
-            is_d2 = self.env.d2[0] == successor[0][0]
-            new_state = (new_state_index, is_d1 or node.state[1], is_d2 or node.state[2])
-            new_successor = (new_state, successor[1], successor[2])
-            if self.is_legal_successor(new_successor):
-                expanded.append((new_successor, action))
+        if not node.state[0] in [state[0] for state in self.env.get_goal_states()]:
+            for action, successor in succs.items():
+                if successor[0] is not None :
+                    new_state_index = successor[0][0]
+                    is_d1 = self.env.d1[0] == successor[0][0]
+                    is_d2 = self.env.d2[0] == successor[0][0]
+                    new_state = (new_state_index, is_d1 or node.state[1], is_d2 or node.state[2])
+                    new_successor = (new_state, successor[1], successor[2])
+                    expanded.append((new_successor, action))
         return expanded
     
-    def is_legal_successor(self, successor):
-        if successor[1] == np.inf:
-            return False
-        if successor[0][0] in [state[0] for state in self.env.get_goal_states()] and (successor[0][1] == False or successor[0][2] == False):
-            return False
-        return True
 
 class BFSAgent(Agent):
     def __init__(self):
