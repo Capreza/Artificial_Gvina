@@ -4,8 +4,36 @@ import random
 
 
 # TODO: section a : 3
+def get_dist_curr_goal(env: WarehouseEnv, robot_id: int):
+    distances = []
+    our_robot = env.get_robot(robot_id)
+    if our_robot.position == (0,4):
+        print("foo")
+    if our_robot.package is not None:
+        return manhattan_distance(our_robot.position,our_robot.package.destination)
+    else:
+        for package in env.packages:
+            distances.append(manhattan_distance(our_robot.position,package.position))
+        print("get dist curr goal")
+        print("_"*100)
+        print("curr location = ", our_robot.position)
+        print(min(distances))
+        print("_"*100)
+        return min(distances)
+
+
+def get_dist_charging_station(env: WarehouseEnv, robot_id: int) -> int:
+    our_robot = env.get_robot(robot_id)
+    return min(
+        manhattan_distance(our_robot.position,env.charge_stations[0].position),
+        manhattan_distance(our_robot.position,env.charge_stations[1].position)
+    )
+
+
 def smart_heuristic(env: WarehouseEnv, robot_id: int):
-    pass
+    our_robot = env.get_robot(robot_id)
+    dist_from_current_goal = get_dist_curr_goal(env,robot_id)
+    return -dist_from_current_goal + our_robot.credit*10 + (9 if our_robot.package is not None else 0)
 
 class AgentGreedyImproved(AgentGreedy):
     def heuristic(self, env: WarehouseEnv, robot_id: int):

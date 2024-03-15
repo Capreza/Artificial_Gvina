@@ -55,7 +55,7 @@ class WarehouseEnv(object):
         self.num_steps = num_steps
         self.seed = seed
         self.robots = [Robot(p, 20, 0) for p in self.random_cells(2)]
-        self.packages = [Package(p, d) for _ in range(4) for p in self.random_cells(1) for d in
+        self.packages = [Package(p, d) for _ in range(2) for p in self.random_cells(1) for d in
                          self.random_cells(1)]
         for i in range(2):
             self.packages[i].on_board = True
