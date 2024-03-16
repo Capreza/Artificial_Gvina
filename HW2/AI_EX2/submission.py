@@ -1,3 +1,7 @@
+import math
+import time
+import timeit
+
 from Agent import Agent, AgentGreedy
 from WarehouseEnv import WarehouseEnv, manhattan_distance
 import random
@@ -43,13 +47,138 @@ class AgentGreedyImproved(AgentGreedy):
 class AgentMinimax(Agent):
     # TODO: section b : 1
     def run_step(self, env: WarehouseEnv, agent_id, time_limit):
-        raise NotImplementedError()
+        start_time = time.time()
+        raise RuntimeError("implement depth limit")
+        operators = env.get_legal_operators(agent_id)
+        children = [env.clone() for _ in operators]
+        curr_max = -math.inf, None
+        for child, op in zip(children, operators):
+            child.apply_operator(agent_id, op)
+            curr_val = self.minimax(child, agent_id, 1 - agent_id, time_limit, start_time)
+            if curr_val >= curr_max[0]:
+                curr_max = curr_val,op
+        return curr_max[1]
+
+    def minimax(self,env,agent,turn_id,time_limit, start_time):
+        if time.time() - start_time >= time_limit - 0.03:
+            return self.heuristic(env,agent)
+        if env.done():
+            if env.get_robot(agent).credit > env.get_robot(1 - agent).credit:
+                return math.inf
+            elif env.get_robot(agent).credit < env.get_robot(1-agent).credit:
+                return -math.inf
+            else:
+                return 0
+        operators = env.get_legal_operators(turn_id)
+        children = [env.clone() for _ in operators]
+        if turn_id == agent:
+            curr_max = -math.inf
+            for child, op in zip(children,operators):
+                child.apply_operator(turn_id,op)
+                curr_val = self.minimax(child, agent, 1 - turn_id, time_limit, start_time)
+                curr_max = max(curr_val,curr_max)
+            return curr_max
+        else:
+            curr_min = math.inf
+            for child, op in zip(children, operators):
+                child.apply_operator(turn_id, op)
+                curr_val = self.minimax(child, agent, 1 - turn_id,time_limit, start_time)
+                curr_min = min(curr_val,curr_min)
+            return curr_min
 
 
+# class AgentAlphaBeta(Agent):
+#     # TODO: section b : 1
+#     def run_step(self, env: WarehouseEnv, agent_id, time_limit):
+#         start_time = time.time()
+#         operators = env.get_legal_operators(agent_id)
+#         children = [env.clone() for _ in operators]
+#         curr_max = -math.inf, None
+#         for child, op in zip(children, operators):
+#             child.apply_operator(agent_id, op)
+#             curr_val = self.minimax(child, agent_id, 1 - agent_id, time_limit, start_time, alpha=-math.inf,beta=math.inf)
+#             if curr_val >= curr_max[0]:
+#                 curr_max = curr_val,op
+#         return curr_max[1]
+#
+#     def minimax(self,env,agent,turn_id,time_limit, start_time, alpha, beta):
+#         if time.time() - start_time >= time_limit - 0.03:
+#             return self.heuristic(env,agent)
+#         if env.done():
+#             if env.get_robot(agent).credit > env.get_robot(1 - agent).credit:
+#                 return math.inf
+#             elif env.get_robot(agent).credit < env.get_robot(1-agent).credit:
+#                 return -math.inf
+#             else:
+#                 return 0
+#         operators = env.get_legal_operators(turn_id)
+#         children = [env.clone() for _ in operators]
+#         if turn_id == agent:
+#             curr_max = -math.inf
+#             for child, op in zip(children,operators):
+#                 child.apply_operator(turn_id,op)
+#                 curr_val = self.minimax(child, agent, 1 - turn_id, time_limit, start_time, alpha, beta)
+#                 curr_max = max(curr_val,curr_max)
+#                 alpha = max(curr_max,alpha)
+#                 if curr_max >= beta:
+#                     return math.inf
+#             return curr_max
+#         else:
+#             curr_min = math.inf
+#             for child, op in zip(children, operators):
+#                 child.apply_operator(turn_id, op)
+#                 curr_val = self.minimax(child, agent, 1 - turn_id,time_limit, start_time, alpha, beta)
+#                 curr_min = min(curr_val,curr_min)
+#                 beta = min(curr_min,beta)
+#                 if curr_min <= alpha:
+#                     return -math.inf
+#             return curr_min
 class AgentAlphaBeta(Agent):
-    # TODO: section c : 1
+    # TODO: section b : 1
     def run_step(self, env: WarehouseEnv, agent_id, time_limit):
-        raise NotImplementedError()
+        start_time = time.time()
+        operators = env.get_legal_operators(agent_id)
+        children = [env.clone() for _ in operators]
+        curr_max = -math.inf, None
+        for child, op in zip(children, operators):
+            child.apply_operator(agent_id, op)
+            curr_val = self.minimax(child, agent_id, 1 - agent_id, time_limit, start_time, alpha=-math.inf,beta=math.inf,depth=10)
+            if curr_val >= curr_max[0]:
+                curr_max = curr_val,op
+        return curr_max[1]
+
+    def minimax(self,env,agent,turn_id,time_limit, start_time, alpha, beta,depth):
+        if time.time() - start_time >= time_limit - 0.03 or depth==0:
+            return self.heuristic(env,agent)
+        if env.done():
+            if env.get_robot(agent).credit > env.get_robot(1 - agent).credit:
+                return math.inf
+            elif env.get_robot(agent).credit < env.get_robot(1-agent).credit:
+                return -math.inf
+            else:
+                return 0
+        operators = env.get_legal_operators(turn_id)
+        children = [env.clone() for _ in operators]
+        if turn_id == agent:
+            curr_max = -math.inf
+            for child, op in zip(children,operators):
+                child.apply_operator(turn_id,op)
+                curr_val = self.minimax(child, agent, 1 - turn_id, time_limit, start_time, alpha, beta,depth-1)
+                curr_max = max(curr_val,curr_max)
+                alpha = max(curr_max,alpha)
+                if curr_max >= beta:
+                    return math.inf
+            return curr_max
+        else:
+            curr_min = math.inf
+            for child, op in zip(children, operators):
+                child.apply_operator(turn_id, op)
+                curr_val = self.minimax(child, agent, 1 - turn_id,time_limit, start_time, alpha, beta,depth-1)
+                curr_min = min(curr_val,curr_min)
+                beta = min(curr_min,beta)
+                if curr_min <= alpha:
+                    return -math.inf
+            return curr_min
 
 
 class AgentExpectimax(Agent):
