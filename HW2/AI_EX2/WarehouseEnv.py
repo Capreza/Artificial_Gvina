@@ -54,6 +54,9 @@ class WarehouseEnv(object):
     def generate(self, seed, num_steps):
         self.num_steps = num_steps
         self.seed = seed
+        print("="*100, seed)
+        print("SEED = ", seed)
+        print("="*100, seed)
         self.robots = [Robot(p, 20, 0) for p in self.random_cells(2)]
         self.packages = [Package(p, d) for _ in range(2) for p in self.random_cells(1) for d in
                          self.random_cells(1)]

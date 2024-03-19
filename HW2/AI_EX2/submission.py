@@ -11,18 +11,11 @@ import random
 def get_dist_curr_goal(env: WarehouseEnv, robot_id: int):
     distances = []
     our_robot = env.get_robot(robot_id)
-    if our_robot.position == (0,4):
-        print("foo")
     if our_robot.package is not None:
         return manhattan_distance(our_robot.position,our_robot.package.destination)
     else:
         for package in env.packages:
             distances.append(manhattan_distance(our_robot.position,package.position))
-        print("get dist curr goal")
-        print("_"*100)
-        print("curr location = ", our_robot.position)
-        print(min(distances))
-        print("_"*100)
         return min(distances)
 
 
@@ -36,8 +29,11 @@ def get_dist_charging_station(env: WarehouseEnv, robot_id: int) -> int:
 
 def smart_heuristic(env: WarehouseEnv, robot_id: int):
     our_robot = env.get_robot(robot_id)
+    other_robot = env.get_robot(1-robot_id)
     dist_from_current_goal = get_dist_curr_goal(env,robot_id)
-    return -dist_from_current_goal + our_robot.credit*10 + (9 if our_robot.package is not None else 0)
+    heuristic_val = (our_robot.credit * 100 - other_robot.credit * 100 +
+            (90 if our_robot.package is not None else 0) - dist_from_current_goal) + 0.1 * our_robot.position[1]
+    return heuristic_val
 
 class AgentGreedyImproved(AgentGreedy):
     def heuristic(self, env: WarehouseEnv, robot_id: int):
@@ -48,19 +44,25 @@ class AgentMinimax(Agent):
     # TODO: section b : 1
     def run_step(self, env: WarehouseEnv, agent_id, time_limit):
         start_time = time.time()
-        raise RuntimeError("implement depth limit")
-        operators = env.get_legal_operators(agent_id)
-        children = [env.clone() for _ in operators]
-        curr_max = -math.inf, None
-        for child, op in zip(children, operators):
-            child.apply_operator(agent_id, op)
-            curr_val = self.minimax(child, agent_id, 1 - agent_id, time_limit, start_time)
-            if curr_val >= curr_max[0]:
-                curr_max = curr_val,op
+
+        curr_max = (0, None)
+        max_depth = 1
+        while True:  #TODO: change cond
+
+            operators = env.get_legal_operators(agent_id)
+            children = [env.clone() for _ in operators]
+            curr_max = -math.inf, None
+            for child, op in zip(children, operators):
+                child.apply_operator(agent_id, op)
+                curr_val = self.minimax(child, agent_id, 1 - agent_id, time_limit, start_time, max_depth-1)
+                if curr_val >= curr_max[0]:
+                    curr_max = curr_val,op
+            max_depth += 1
+
         return curr_max[1]
 
-    def minimax(self,env,agent,turn_id,time_limit, start_time):
-        if time.time() - start_time >= time_limit - 0.03:
+    def minimax(self,env,agent,turn_id,time_limit, start_time,depth_limit):
+        if time.time() - start_time >= time_limit - 0.03 or depth_limit == 0:
             return self.heuristic(env,agent)
         if env.done():
             if env.get_robot(agent).credit > env.get_robot(1 - agent).credit:
@@ -87,52 +89,6 @@ class AgentMinimax(Agent):
             return curr_min
 
 
-# class AgentAlphaBeta(Agent):
-#     # TODO: section b : 1
-#     def run_step(self, env: WarehouseEnv, agent_id, time_limit):
-#         start_time = time.time()
-#         operators = env.get_legal_operators(agent_id)
-#         children = [env.clone() for _ in operators]
-#         curr_max = -math.inf, None
-#         for child, op in zip(children, operators):
-#             child.apply_operator(agent_id, op)
-#             curr_val = self.minimax(child, agent_id, 1 - agent_id, time_limit, start_time, alpha=-math.inf,beta=math.inf)
-#             if curr_val >= curr_max[0]:
-#                 curr_max = curr_val,op
-#         return curr_max[1]
-#
-#     def minimax(self,env,agent,turn_id,time_limit, start_time, alpha, beta):
-#         if time.time() - start_time >= time_limit - 0.03:
-#             return self.heuristic(env,agent)
-#         if env.done():
-#             if env.get_robot(agent).credit > env.get_robot(1 - agent).credit:
-#                 return math.inf
-#             elif env.get_robot(agent).credit < env.get_robot(1-agent).credit:
-#                 return -math.inf
-#             else:
-#                 return 0
-#         operators = env.get_legal_operators(turn_id)
-#         children = [env.clone() for _ in operators]
-#         if turn_id == agent:
-#             curr_max = -math.inf
-#             for child, op in zip(children,operators):
-#                 child.apply_operator(turn_id,op)
-#                 curr_val = self.minimax(child, agent, 1 - turn_id, time_limit, start_time, alpha, beta)
-#                 curr_max = max(curr_val,curr_max)
-#                 alpha = max(curr_max,alpha)
-#                 if curr_max >= beta:
-#                     return math.inf
-#             return curr_max
-#         else:
-#             curr_min = math.inf
-#             for child, op in zip(children, operators):
-#                 child.apply_operator(turn_id, op)
-#                 curr_val = self.minimax(child, agent, 1 - turn_id,time_limit, start_time, alpha, beta)
-#                 curr_min = min(curr_val,curr_min)
-#                 beta = min(curr_min,beta)
-#                 if curr_min <= alpha:
-#                     return -math.inf
-#             return curr_min
 class AgentAlphaBeta(Agent):
     # TODO: section b : 1
     def run_step(self, env: WarehouseEnv, agent_id, time_limit):
