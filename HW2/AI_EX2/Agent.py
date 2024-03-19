@@ -31,19 +31,11 @@ class AgentRandom(Agent):
 class AgentGreedy(Agent):
     def run_step(self, env: WarehouseEnv, robot_id, time_limit):
         operators = env.get_legal_operators(robot_id)
-        print("="*100)
-        print("operators =", operators)
-        print("="*100)
         children = [env.clone() for _ in operators]
         for child, op in zip(children, operators):
             child.apply_operator(robot_id, op)
         children_heuristics = [self.heuristic(child, robot_id) for child in children]
         max_heuristic = max(children_heuristics)
-        print("SELECTED HEURISTIC")
-        print("_"*100)
-        print(max_heuristic)
-        print(children_heuristics.index(max_heuristic))
-        print("_"*100)
         index_selected = children_heuristics.index(max_heuristic)
         return operators[index_selected]
 
