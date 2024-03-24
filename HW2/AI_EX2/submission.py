@@ -56,7 +56,7 @@ class AgentMinimax(Agent):
         max_depth = 1
         operators = env.get_legal_operators(agent_id)
 
-        while time.time() - start_time < time_limit - 0.03:
+        while time.time() - start_time < time_limit - 0.04:
             children = [env.clone() for _ in operators]
             for child, op in zip(children, operators):
                 child.apply_operator(agent_id, op)
@@ -69,7 +69,7 @@ class AgentMinimax(Agent):
         return curr_max[1]
 
     def minimax(self,env,agent,turn_id,time_limit, start_time,depth_limit):
-        if time.time() - start_time >= time_limit - 0.03 or depth_limit == 0:
+        if time.time() - start_time >= time_limit - 0.04 or depth_limit == 0:
             return self.heuristic(env,agent)
         if env.done():
             if env.get_robot(agent).credit > env.get_robot(1 - agent).credit:
@@ -107,7 +107,7 @@ class AgentAlphaBeta(Agent):
         max_depth = 1
         operators = env.get_legal_operators(agent_id)
 
-        while time.time() - start_time < time_limit - 0.03:
+        while time.time() - start_time < time_limit - 0.04:
             children = [env.clone() for _ in operators]
             for child, op in zip(children, operators):
                 child.apply_operator(agent_id, op)
@@ -120,7 +120,7 @@ class AgentAlphaBeta(Agent):
         return curr_max[1]
 
     def minimax(self,env,agent,turn_id,time_limit, start_time, alpha, beta,depth):
-        if time.time() - start_time >= time_limit - 0.03 or depth == 0:
+        if time.time() - start_time >= time_limit - 0.04 or depth == 0:
             return self.heuristic(env,agent)
 
         if env.done():
@@ -168,7 +168,7 @@ class AgentExpectimax(Agent):
         max_depth = 1
         operators = env.get_legal_operators(agent_id)
 
-        while time.time() - start_time < time_limit - 0.03:
+        while time.time() - start_time < time_limit - 0.04:
             children = [env.clone() for _ in operators]
             for child, op in zip(children, operators):
                 child.apply_operator(agent_id, op)
@@ -181,7 +181,7 @@ class AgentExpectimax(Agent):
         return curr_max[1]
 
     def minimax(self,env,agent,turn_id,time_limit, start_time,depth_limit):
-        if time.time() - start_time >= time_limit - 0.03 or depth_limit == 0:
+        if time.time() - start_time >= time_limit - 0.04 or depth_limit == 0:
             return self.heuristic(env,agent)
         if env.done():
             if env.get_robot(agent).credit > env.get_robot(1 - agent).credit:
